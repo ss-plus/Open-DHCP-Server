@@ -1,0 +1,7 @@
+Logging will be done only if run as Service.
+LogLevel can be set as None, Normal or All
+It is advisable to keep logging to Normal, Normal include errors 
+and renewal messages. Normal is defaul logging also.
+Log file should be specified at command line.
+Log file name should include %Y%m%d, %Y will be replaced
+by Current Year, %m by current month and %d by current date.

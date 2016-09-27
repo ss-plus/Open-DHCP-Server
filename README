@@ -1,0 +1,193 @@
+This release 1.64 is Stable Production Release.
+
+ENHANCEMENTS in 1.64
+
+Code Enhancement
+
+ENHANCEMENTS in 1.58/1.59
+
+1) Subnet Selection can now be manually configured.
+2) Target Relay Agent can be overridden.
+3) HTTP Interface can be restricted.
+4) HTTP Interface blocking fixed
+
+DOWNLOAD
+
+The latest version can be downloaded from http://dhcpserver.sourceforge.net/
+
+DOCUMENTATION
+
+OpenDHCPServerManual.pdf is included in the distro
+
+INSTALLATION
+
+This program if installed on a machine, which is static configured for IP Address,
+DNS & router, it detects these settings from server machine (If you want diffrent
+setting for clients, edit ini file) and uses them for configuring other machines
+on local network.
+
+Expand the gz archive to any directory (say <installDir>)
+Change the permissions of file opendhcpd with chmod 711 opendhcpd
+For daemonizing, look at section DAEMONIZING below.
+
+test run as root:-
+#<installDir>/opendhcpd -v
+You should see something similar to:-
+
+Starting DHCP...
+Server Name: LinuxServer
+Detecting Static Interfaces..
+Lease Status URL: http://192.168.33.2
+Listening On: 192.168.33.2
+Listening On: 192.168.55.2
+
+Now try getting IP Address for another machine, it should work.
+
+RUNNING
+
+This program runs in two modes:-
+a) Verbatim Mode (using -v argument)
+b) Daemon (not using -v argument)
+
+This program uses 2 or 3 helper files:-
+i)   -i[inifile], where configuration settings can be specified,
+     default is ./etc/opendhcpd.ini
+ii)  -s[statefile] saves current leases, default is /etc/opendhcpd.state 
+iii) -l[logfile] dumps log to this file in daemon mode, default is syslog
+
+You can start/run as:-
+
+<installDir>/opendhcpd (daemon with default files)
+<installDir>/opendhcpd -v (verbatim with default files)
+<installDir>/opendhcpd -i inifile -s statefile -l logfile (as daemon)
+<installDir>/opendhcpd -i inifile -s statefile (as daemon)
+<installDir>/opendhcpd  -v -i inifile -s statefile as verbatim
+
+Please include %Y for full year or %y for 2 digit year, %m for month, %d for day
+of month like:-
+
+<installDir>d/opendhcpd -l <installDir>d/log/opendhcpd%Y%m%d.log -i<installDir>d/opendhcpd.ini
+
+Order of %Y %m %d is not important. You can also include just %m and %Y if you want monthly log file like:-
+
+<installDirecory>/opendhcpd -l <logDirecory>/opendhcpd%Y%m.log -i<someDirecory>/opendhcpd.ini
+
+As shown above if you use separate directory for log file, you should manually create this directory
+
+DAEMONIZING
+
+If your system supports chkconfig command, you can use the enclosed
+rc.opendhcp file to add the service. Simply copy rc.opendhcp as
+/etc/init.d/opendhcp (or just create a link to it as opendhcpserver in init.d)
+and make it executable. Also change the file paths (depending on where you
+have installed the executive and log file directory) in this file.
+Then you can use chkconfig command to add the daemon.
+
+#ln -s <installDir>/rc.opendhcp /etc/init.d/opendhcp
+#chmod 755 /etc/init.d/opendhcp
+#chkconfig --add opendhcp
+#chkconfig opendhcp on
+Thats all you may need.
+
+If you dont have chkconfig command, you can manually modify boot scripts
+in /etc/rc.d/rc.local file or /etc/inittab file or /etc/rc.d/rc.inet2
+file. Also you need to do following changes:-
+
+Add the enclosed rc.opendhcp script in /etc/rc.d and make it executable (755).
+Also change the file paths (depending on where you have installed the executive
+and log file directory) in this file. Finally you need to add the lines:-
+
+# Start the Dual DHCP DNS Server daemon:
+if [ -x /etc/rc.d/rc.opendhcp ]; then
+/etc/rc.d/rc.opendhcp start
+fi
+
+to any of above scripts (preferably to /etc/rc.d/rc.inet2)
+
+COMPILING
+
+Recompiling is not generally needed on 32 bit Intel/Linux systems.
+For other system, you should. Try:-
+
+#g++ opendhcpd.cpp -oopendhcpd -lpthread
+#g++ opendhcpd.cpp -oopendhcpd -lpthread -lgcc_s
+#cc opendhcpd.cpp -oopendhcpd -lsocket -lnsl -lpthread
+
+You need C++ compiler for Versions 3 onwards, as these versions use STL
+If you have only C Compiler, you need to download and use Version 2.1 only.
+
+CONFIGURATION
+
+1) Configuration of Server
+
+   Server configuration is stored in enclosed opendhcp.ini file, which is self 
+   explainatory. At the minimum the Server needs to be specified DHCP Range or Static Clients.
+   In the packaged opendhcp.ini file, DHCP Range 192.168.0.1-DHCP Range 192.168.0.254 is 
+   specified, for testing, which can be changed.
+   
+2) Configuration of Clients
+
+   a. You can use windows/linux/unix mix of clients.
+   b. The clients should be set to get IP Address automatically.
+
+REPLICATED OPERATION
+
+This is the unique feature of Open DHCP Server that two instances can be simultaneously used. The
+database of both servers remains in synch as special DHCP INFORM messages flow between the servers
+in unicast mode. When one server renew or allott the lease, other server gets this info and adds the
+info in its database. These two servers run on load sharing basis. Now if one server goes down, other
+can renew the lease when DHCP REQUEST goes in broadcast mode, without interuption in server.
+
+GENERAL
+   
+1) This document is for guidance and is covered under GNU public license.
+
+DEBUG
+
+If program is not assigning addresses or resolve them check:-
+
+1) Ensure that you run this program as root only.
+2) Check network hardware and ensure that client machines has different host names from server and
+   each other.
+3) No other service should be running on Server on ports 67.
+4) If you get error like port 67 already in use means some other DHCP program or proxy server with DHCP 
+   service is running. Use netstat command to detect which program is listening on these ports.
+   It is also possible that another copy of opendhcpd itself is running.
+5) If you get error Static Interfaces/Listening Ports not available, it may be because of 1) Another
+   dhcp Server is running or Interfaces specified on [LISTEN_ON] section are not available.
+   or you have just restated the server and TCP port is not yet closed, then wait for some time.
+6) Look at log file (if running as service) or Run in standalone mode, it will provide all debug
+   information as it verbatim the activities.
+7) If you use Braodband router, which also has DHCP Server, this program may still run, but some hosts
+   configured by other DHCP Server may not use this DNS Service. Please disable the DHCP Service on
+   Broadband router.
+8) opendhcpd.state file backs up current leases and is read back when server restarts. If you want to 
+   clean previous leases, you may delete this file and restart the server.
+9) Errors like "libstdc++.so.?: cannot open shared object file: No such file or directory" 
+   are possible in some Linux flavours. Please recompile the program or create symbolic links:-
+	ln -s /usr/local/lib/libstdc++.so.? /usr/lib/libstdc++.so.? 
+	ln -s /usr/local/lib/libgcc_s.so.? /usr/lib/libgcc_s.so.?
+   (? is library version as reported in error)
+   or add the library path (directory where above file is) to env variable LD_LIBRARY_PATH.
+10)If you are not able to receive DHCP Discover messages from clients, make sure that Dual DHCP DNS Server
+   and client are on same physical network (not separated by routers). If it is separated by routers and it
+   is same subnet, please allow routers to pass broadcast messages to Server on Port 67. If these are 
+   different subnets, use the BOOTP relay agents.
+11) Make sure that firewall is allowing packets on ports 53 and 67.
+12) If you have just upgraded from previous version and program just dies or fails to start, please
+    delete /tmp/dualserver.state file and retry.
+
+UNINSTALLATION
+
+	Just remove the program directory. You should also remove entries from initialize scripts of 
+	your machine.
+
+BUGS
+	If you find any problem with this program or need more features, please send mail to achaldhir@gmail.com.
+	You may also send thanks email if it works fine for you.
+	
+DONATIONS
+
+	If you find that this program is suitable for your office environment and you are using it, Please consider
+	some donation for this project. $10-$50 do not make any difference to office, but it does make difference
+	to Project.
