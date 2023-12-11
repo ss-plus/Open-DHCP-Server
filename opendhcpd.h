@@ -22,7 +22,7 @@
 #define MAX_SERVERS 125
 #define MAX_DHCP_RANGES 125
 #define MAX_RANGE_SETS 125
-#define MAX_RANGE_FILTERS 32
+#define MAX_RANGE_FILTERS 500
 
 #ifndef LOG_MAKEPRI
 #define	LOG_MAKEPRI(fac, pri)	(((fac) << 3) | (pri))
